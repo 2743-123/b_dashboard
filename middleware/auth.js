@@ -1,29 +1,28 @@
 const jwt = require('jsonwebtoken');
 
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
 
-// Middleware to verify JWT token
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
+  // Check if Authorization header exists
+  if (!authHeader) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  // Extract token from header
+  const token = authHeader.split(' ')[1]; // Assuming 'Bearer <token>'
+
   if (!token) {
-    return res.status(403).json({ message: 'No token provided' });
+    return res.status(401).json({ message: 'No token provided' });
   }
 
-  jwt.verify(token, 'your_jwt_secret', (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-    req.userId = decoded.id;
-    req.userRole = decoded.role;
-    next();
-  });
-};
-
-// Middleware to check for superadmin
-const requireSuperadmin = (req, res, next) => {
-  if (req.userRole !== 'superadmin') {
-    return res.status(403).json({ message: 'Access denied: Superadmin only' });
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Attach decoded token to request object
+    next(); // Proceed to the next middleware or route handler
+  } catch (err) {
+    res.status(400).json({ message: 'Invalid token' });
   }
-  next();
 };
 
-module.exports = { verifyToken, requireSuperadmin };
+module.exports = authenticate;

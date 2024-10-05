@@ -1,9 +1,15 @@
 const express = require('express');
-const { verifyToken, requireSuperadmin } = require('../middleware/auth');
 const router = express.Router();
+const authenticate = require('../middleware/auth');
 
-router.get('/superadmin-dashboard', verifyToken, requireSuperadmin, (req, res) => {
-  res.json({ message: 'Welcome to the superadmin dashboard!' });
+// Apply authentication middleware to all routes in this router
+router.use(authenticate);
+
+// Example Superadmin Route
+router.get('/', (req, res) => {
+  res.json({ message: 'Welcome Super Admin!' });
 });
+
+// Add more superadmin routes here
 
 module.exports = router;

@@ -1,33 +1,62 @@
 const express = require('express');
+const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const User = require('../models/user');  // Sequelize User model
-const router = express.Router();
+const { User } = require('../models'); // Ensure you export User model correctly
 
-// Example superadmin email
-const SUPERADMIN_EMAIL = 'superadmin@example.com';
+// Register Route
+router.post('/register', async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    
-    const user = await User.findAll({where: { email }});
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid password' });
+    // Compare passwords
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const role = email === SUPERADMIN_EMAIL ? 'superadmin' : user.role;
-    const token = jwt.sign({ id: user.id, role }, 'your_jwt_secret', { expiresIn: '1h' });
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-    res.json({ token, role });
+    res.json({ token });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
