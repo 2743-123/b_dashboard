@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require('body-parser');
@@ -12,10 +13,10 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Sequelize connection setup
-const sequelize = new Sequelize('asif', 'asif', 'As2743@', {
-    host: 'localhost',
+const sequelize = new Sequelize(process.env.DATABASE_NAME, process.env.DATABASE_USER, process.env.DATABASE_PASSWORD, {
+    host: process.env.DATABASE_HOST,
     dialect: 'postgres',
-  });
+});
 // User model
 const User = sequelize.define('User', {
     firstName: DataTypes.STRING,

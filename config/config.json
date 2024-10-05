@@ -14,10 +14,13 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": "asif",
-    "password": "As2743@",
-    "database": "asif",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
+    "use_env_variable": "DATABASE_URL",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   }
 }

@@ -21,3 +21,5 @@ yarn-error.log*
 # IDE specific files
 .vscode/
 .idea/
+.vercel
+/Procfile
